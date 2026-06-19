@@ -1,0 +1,63 @@
+hostname PROD-CORE-ROUTER-01
+version 15.7
+!
+! ============================================================
+! PRODUCTION CORE ROUTER - BASELINE CONFIGURATION
+! Last Modified: 2026-01-15
+! Change Request: N/A (Baseline)
+! ============================================================
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+enable secret 9 $9$ABC123DEF456GHI789
+!
+username admin privilege 15 secret 9 $9$XYZ987UVW654RST321
+!
+! --- Access Control Lists ---
+ip access-list extended MGMT-ACL
+ permit tcp 10.10.1.0 0.0.0.255 any eq 22
+ permit tcp 10.10.1.0 0.0.0.255 any eq 443
+ deny ip any any log
+!
+ip access-list extended INTERNET-IN
+ permit tcp any any eq 443
+ permit tcp any any eq 80
+ deny ip any any log
+!
+! --- Interface Configuration ---
+interface GigabitEthernet0/0
+ description WAN_UPLINK_PRIMARY
+ ip address 203.0.113.1 255.255.255.252
+ ip access-group INTERNET-IN in
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description LAN_INTERNAL
+ ip address 10.10.0.1 255.255.0.0
+ no shutdown
+!
+! --- Routing ---
+ip route 0.0.0.0 0.0.0.0 203.0.113.2
+!
+! --- NTP ---
+ntp server 10.10.1.100
+ntp server 10.10.1.101
+!
+! --- Logging ---
+logging host 10.10.1.50
+logging trap informational
+logging buffered 16384
+!
+! --- SNMP ---
+snmp-server community private RO 10
+snmp-server location "Data Center Rack 5"
+!
+line vty 0 4
+ access-class MGMT-ACL in
+ login local
+ transport input ssh
+ exec-timeout 10 0
+!
+end

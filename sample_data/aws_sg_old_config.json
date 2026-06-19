@@ -1,0 +1,88 @@
+{
+  "SecurityGroups": [
+    {
+      "GroupId": "sg-001a",
+      "GroupName": "prod-web-sg",
+      "Description": "Production web server security group",
+      "VpcId": "vpc-12345",
+      "InboundRules": [
+        {
+          "Protocol": "TCP",
+          "FromPort": 443,
+          "ToPort": 443,
+          "Source": "0.0.0.0/0",
+          "Description": "HTTPS from internet"
+        },
+        {
+          "Protocol": "TCP",
+          "FromPort": 80,
+          "ToPort": 80,
+          "Source": "0.0.0.0/0",
+          "Description": "HTTP redirect"
+        },
+        {
+          "Protocol": "TCP",
+          "FromPort": 22,
+          "ToPort": 22,
+          "Source": "10.0.1.0/24",
+          "Description": "SSH from VPN only"
+        }
+      ],
+      "OutboundRules": [
+        {
+          "Protocol": "-1",
+          "FromPort": 0,
+          "ToPort": 0,
+          "Destination": "0.0.0.0/0",
+          "Description": "All outbound"
+        }
+      ],
+      "Tags": {
+        "Environment": "production",
+        "Team": "infrastructure",
+        "CostCenter": "CC-001"
+      }
+    },
+    {
+      "GroupId": "sg-002b",
+      "GroupName": "prod-db-sg",
+      "Description": "Production database security group",
+      "VpcId": "vpc-12345",
+      "InboundRules": [
+        {
+          "Protocol": "TCP",
+          "FromPort": 5432,
+          "ToPort": 5432,
+          "Source": "10.0.0.0/24",
+          "Description": "PostgreSQL from app servers only"
+        }
+      ],
+      "OutboundRules": [],
+      "Tags": {
+        "Environment": "production",
+        "Team": "database"
+      }
+    }
+  ],
+  "NetworkACLs": [
+    {
+      "AclId": "acl-001",
+      "VpcId": "vpc-12345",
+      "Rules": [
+        {"RuleNumber": 100, "Protocol": "TCP", "Action": "ALLOW", "CidrBlock": "0.0.0.0/0", "PortRange": {"From": 443, "To": 443}},
+        {"RuleNumber": 110, "Protocol": "TCP", "Action": "ALLOW", "CidrBlock": "10.0.0.0/8", "PortRange": {"From": 0, "To": 65535}},
+        {"RuleNumber": 32767, "Protocol": "-1", "Action": "DENY", "CidrBlock": "0.0.0.0/0", "PortRange": {"From": 0, "To": 65535}}
+      ]
+    }
+  ],
+  "DNSSettings": {
+    "PrimaryDNS": "10.0.0.2",
+    "SecondaryDNS": "10.0.0.3",
+    "SearchDomain": "internal.company.com"
+  },
+  "Logging": {
+    "CloudTrailEnabled": true,
+    "VPCFlowLogsEnabled": true,
+    "LogRetentionDays": 90
+  }
+}

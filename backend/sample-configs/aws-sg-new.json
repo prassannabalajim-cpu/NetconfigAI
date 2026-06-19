@@ -1,0 +1,33 @@
+{
+  "SecurityGroups": [{
+    "GroupId": "sg-0abc123def456",
+    "GroupName": "app-server-sg",
+    "Description": "Application Server Security Group",
+    "IpPermissions": [
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "HTTPS public"}]
+      },
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 3306,
+        "ToPort": 3306,
+        "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "DB access CHANGED"}]
+      },
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 22,
+        "ToPort": 22,
+        "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "SSH CHANGED - CRITICAL"}]
+      },
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 8080,
+        "ToPort": 8080,
+        "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "New HTTP port added"}]
+      }
+    ]
+  }]
+}

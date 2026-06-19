@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: keycloak_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-KeycloakAdmin2024!}
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak_user -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: keycloak_server
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-KeycloakAdmin2024!}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-AdminSecure2024!}
+      # For production, set to true and use a reverse proxy
+      KC_PROXY: edge
+    command: start-dev # Change to 'start' in production and configure HTTPS/certs
+    ports:
+      - "8080:8080"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - keycloak_network
+      - netconfig_network # Attach to the main app network so FastAPI can reach it
+
+volumes:
+  keycloak_postgres_data:
+
+networks:
+  keycloak_network:
+    driver: bridge
+  netconfig_network:
+    external: true

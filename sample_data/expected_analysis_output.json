@@ -1,0 +1,76 @@
+{
+  "sample_review_id": "9d91b211-0e3f-479b-ac85-565f6f2a7a9f",
+  "title": "AWS Production Security Group Change - CR-2026-0892",
+  "config_type": "AWS Security Group",
+  "cloud_provider": "aws",
+  "status": "pending_review",
+  "overall_risk_score": 92,
+  "risk_level": "CRITICAL",
+  "compliance_score": 35.0,
+  "ai_recommendation": "REJECT",
+  "ai_executive_summary": "This configuration change introduces multiple critical security vulnerabilities. SSH access has been opened to the entire internet (0.0.0.0/0), RDP port 3389 has been added without restriction, the database security group CIDR has been expanded from /24 to /8 exposing it to a significantly larger network, and CloudTrail and VPC Flow Logs have been disabled — removing all security monitoring capability. This change should be REJECTED immediately.",
+  "ai_recommendations": [
+    "REJECT: Do not approve this change. It introduces at minimum 5 critical security violations.",
+    "Restrict SSH (port 22) to the bastion host IP or VPN CIDR range only (e.g., 10.10.1.0/24)",
+    "Remove the RDP (3389) inbound rule entirely — use AWS Systems Manager Session Manager instead",
+    "Revert the database security group CIDR from 10.0.0.0/8 back to 10.0.0.0/24",
+    "Re-enable CloudTrail and VPC Flow Logs immediately — their absence is a compliance violation",
+    "Review who submitted this change request and under what change management process"
+  ],
+  "diff_changes": [
+    {
+      "field_name": "SecurityGroups[0].InboundRules[2].Source",
+      "change_type": "MODIFIED",
+      "old_value": "10.0.1.0/24",
+      "new_value": "0.0.0.0/0",
+      "risk_level": "CRITICAL",
+      "risk_score": 92,
+      "ai_explanation": "SSH port 22 is now accessible from the entire internet. This is the highest priority security violation in this change set. Any attacker can attempt brute-force or exploit known SSH vulnerabilities."
+    },
+    {
+      "field_name": "SecurityGroups[0].InboundRules[3]",
+      "change_type": "ADDED",
+      "old_value": null,
+      "new_value": "{Protocol: TCP, Port: 3389, Source: 0.0.0.0/0}",
+      "risk_level": "CRITICAL",
+      "risk_score": 88,
+      "ai_explanation": "RDP port 3389 has been opened to the internet. RDP is a frequent target for ransomware attacks and brute-force credential stuffing. This rule must be removed."
+    },
+    {
+      "field_name": "SecurityGroups[1].InboundRules[0].Source",
+      "change_type": "MODIFIED",
+      "old_value": "10.0.0.0/24",
+      "new_value": "10.0.0.0/8",
+      "risk_level": "HIGH",
+      "risk_score": 72,
+      "ai_explanation": "Database CIDR expanded from /24 (256 hosts) to /8 (16 million hosts). This exposes the PostgreSQL port to a vastly larger portion of the internal network, violating the principle of least privilege."
+    },
+    {
+      "field_name": "Logging.CloudTrailEnabled",
+      "change_type": "MODIFIED",
+      "old_value": true,
+      "new_value": false,
+      "risk_level": "HIGH",
+      "risk_score": 78,
+      "ai_explanation": "CloudTrail has been disabled. This removes the audit trail for all AWS API calls and is a violation of CIS AWS Benchmark 2.1, NIST AU-2, and PCI-DSS Requirement 10."
+    },
+    {
+      "field_name": "Logging.VPCFlowLogsEnabled",
+      "change_type": "MODIFIED",
+      "old_value": true,
+      "new_value": false,
+      "risk_level": "HIGH",
+      "risk_score": 75,
+      "ai_explanation": "VPC Flow Logs have been disabled. Network traffic can no longer be audited. This is required by NIST 800-53 SI-4 and PCI-DSS Requirement 10.6."
+    }
+  ],
+  "compliance_findings": [
+    {"framework": "CIS", "control_id": "4.1", "control_name": "No unrestricted inbound SSH", "status": "FAIL", "detail": "Port 22 is open to 0.0.0.0/0 — violates CIS AWS Benchmark 4.1"},
+    {"framework": "CIS", "control_id": "2.1", "control_name": "CloudTrail enabled in all regions", "status": "FAIL", "detail": "CloudTrail has been disabled"},
+    {"framework": "NIST", "control_id": "AC-3", "control_name": "Access Enforcement", "status": "FAIL", "detail": "Unrestricted internet access to management ports violates least privilege"},
+    {"framework": "NIST", "control_id": "AU-2", "control_name": "Event Logging", "status": "FAIL", "detail": "Audit logging (CloudTrail + VPC Flow Logs) has been disabled"},
+    {"framework": "PCI-DSS", "control_id": "1.3.1", "control_name": "Inbound internet traffic restricted", "status": "FAIL", "detail": "Ports 22 and 3389 open to all internet traffic"},
+    {"framework": "PCI-DSS", "control_id": "10.2", "control_name": "Log all access to audit trails", "status": "FAIL", "detail": "VPC Flow Logs disabled"},
+    {"framework": "SOC2", "control_id": "CC6.1", "control_name": "Logical access security", "status": "FAIL", "detail": "Unrestricted access to SSH and RDP from internet"}
+  ]
+}

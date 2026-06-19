@@ -1,0 +1,64 @@
+hostname PROD-CORE-ROUTER-01
+version 15.7
+!
+! ============================================================
+! PRODUCTION CORE ROUTER - MODIFIED CONFIGURATION
+! Last Modified: 2026-06-10
+! Change Request: CR-2026-0892 (UNAPPROVED)
+! DANGER: Multiple HIGH/CRITICAL security changes below
+! ============================================================
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+enable password cisco123
+!
+username admin privilege 15 password 0 cisco123
+username backdoor privilege 15 password 0 backdoor999
+!
+! --- Access Control Lists --- MODIFIED
+ip access-list extended MGMT-ACL
+ permit tcp any any eq 22
+ permit tcp any any eq 443
+ permit tcp any any eq 23
+ deny ip any any log
+!
+ip access-list extended INTERNET-IN
+ permit ip any any
+!
+! --- Interface Configuration ---
+interface GigabitEthernet0/0
+ description WAN_UPLINK_PRIMARY
+ ip address 203.0.113.1 255.255.255.252
+ no ip access-group INTERNET-IN in
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description LAN_INTERNAL
+ ip address 10.10.0.1 255.255.0.0
+ no shutdown
+!
+! --- Routing ---
+ip route 0.0.0.0 0.0.0.0 203.0.113.2
+!
+! --- NTP --- CHANGED to public NTP
+ntp server 8.8.8.8
+ntp server 1.1.1.1
+!
+! --- Logging --- DISABLED
+no logging host 10.10.1.50
+no logging trap
+no logging buffered
+!
+! --- SNMP ---
+snmp-server community public RW
+snmp-server location "Data Center Rack 5"
+!
+line vty 0 4
+ no access-class MGMT-ACL in
+ login local
+ transport input all
+ exec-timeout 0 0
+!
+end

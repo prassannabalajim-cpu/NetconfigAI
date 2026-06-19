@@ -1,0 +1,88 @@
+{
+  "vpc": {
+    "id": "vpc-0123456789abcdef0",
+    "cidr_block": "10.100.0.0/16",
+    "subnets": {
+      "public_a": {
+        "id": "subnet-01",
+        "cidr_block": "10.100.1.0/24"
+      },
+      "app_private_a": {
+        "id": "subnet-02",
+        "cidr_block": "10.100.10.0/24"
+      },
+      "db_private_a": {
+        "id": "subnet-03",
+        "cidr_block": "10.100.20.0/24"
+      }
+    },
+    "security_groups": {
+      "alb_sg": {
+        "name": "enterprise-alb-sg",
+        "description": "Allows public HTTP and HTTPS traffic to ALB",
+        "ingress": [
+          {
+            "protocol": "tcp",
+            "from_port": 80,
+            "to_port": 80,
+            "cidr_blocks": ["0.0.0.0/0"]
+          },
+          {
+            "protocol": "tcp",
+            "from_port": 443,
+            "to_port": 443,
+            "cidr_blocks": ["0.0.0.0/0"]
+          }
+        ]
+      },
+      "app_sg": {
+        "name": "enterprise-app-sg",
+        "description": "Allows ingress from ALB and private corporate networks",
+        "ingress": [
+          {
+            "protocol": "tcp",
+            "from_port": 8080,
+            "to_port": 8080,
+            "security_groups": ["alb_sg"]
+          },
+          {
+            "protocol": "tcp",
+            "from_port": 22,
+            "to_port": 22,
+            "cidr_blocks": ["10.200.0.0/16"]
+          }
+        ]
+      },
+      "db_sg": {
+        "name": "enterprise-db-sg",
+        "description": "Restricted database port ingress from application nodes only",
+        "ingress": [
+          {
+            "protocol": "tcp",
+            "from_port": 5432,
+            "to_port": 5432,
+            "security_groups": ["app_sg"]
+          }
+        ]
+      }
+    },
+    "route_tables": {
+      "public_rt": {
+        "routes": [
+          {
+            "destination_cidr_block": "0.0.0.0/0",
+            "gateway_id": "igw-012345"
+          }
+        ]
+      },
+      "private_rt": {
+        "routes": [
+          {
+            "destination_cidr_block": "10.0.0.0/8",
+            "gateway_id": "vgw-067890"
+          }
+        ]
+      }
+    }
+  }
+}

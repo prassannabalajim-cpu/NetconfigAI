@@ -1,0 +1,27 @@
+{
+  "SecurityGroups": [{
+    "GroupId": "sg-0abc123def456",
+    "GroupName": "app-server-sg",
+    "Description": "Application Server Security Group",
+    "IpPermissions": [
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "HTTPS public"}]
+      },
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 3306,
+        "ToPort": 3306,
+        "IpRanges": [{"CidrIp": "10.10.1.0/24", "Description": "App subnet DB access"}]
+      },
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 22,
+        "ToPort": 22,
+        "IpRanges": [{"CidrIp": "10.0.0.0/8", "Description": "Internal SSH only"}]
+      }
+    ]
+  }]
+}
